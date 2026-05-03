@@ -15,6 +15,7 @@ jobs:
           with:
             aws-access-key-id: ${{ secrets.AWS_ACCESS}}
             aws-secret-access-key: ${{ secrets.AWS_SECRET}}
+            aws-region: ap-south-1
           
         - name: verify Terraform
           run: terraform version
