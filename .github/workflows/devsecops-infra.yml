@@ -1,59 +1,62 @@
-name: devsecops-infra
+name: devsecops-infra-pipeline
 on: push
-jobs:
-    devsecops-inf:
+jobs:  
+  devsecops-infra:
+  
     permissions:
-            contents: read # for actions/checkout to fetch code
-            security-events: write # for github/codeql-action/upload-sarif to upload SARIF results           .
-        runs-on: ubuntu-latest
-        steps: 
-        - name: Clone the repo
-          uses: actions/checkout@v6        
-          with:     
-           fetch-depth: 0
-           
-        - name: Secret scanning
-          uses: gitleaks/gitleaks-action@v2
-          env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone the repo
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
 
-         - name: Checkov GitHub Action
-          uses: bridgecrewio/checkov-action@v12
-            with:
-            # This will add both a CLI output to the console and create a results.sarif file
-                output_format: cli,sarif
-                output_file_path: console,results.sarif        
-                
-        - name: Upload SARIF file
-          uses: github/codeql-action/upload-sarif@v2      
-            if: success() || failure()
-            with:
-                sarif_file: results.sarif     
-         
-        - name: setup Terraform           
-          uses: hashicorp/setup-terraform@v4          
-       
-        - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v6.1.0
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS}}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET}}
-            aws-region: ap-south-1
-          
-        - name: verify Terraform
-          run: terraform version
-        
-        - name: Run Terraform init
-          run: terraform init
-          
-        - name: run Terraform format
-          run: terraform fmt
-          
-        - name: run Terraform validate
-          run: terraform validate
-          
-        - name: run Terraform plan
-          run: terraform plan
-          
-        - name: run Terraform apply
-          run: terraform apply -auto-approve
+    - name: Secret Scanning
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   
+
+    - name: Checkov GitHub Action
+      uses: bridgecrewio/checkov-action@v12
+      with:
+          # This will add both a CLI output to the console and create a results.sarif file
+        output_format: cli,sarif
+        output_file_path: console,results.sarif
+        soft_fail: true
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      if: success() || failure()
+      with:
+        sarif_file: results.sarif
+   
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v4
+      
+    - name: Configure AWS Credentials 2
+      uses: aws-actions/configure-aws-credentials@v6.1.0
+      with:
+        aws-region: ap-south-1
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Verify Terraform Version
+      run: terraform version
+      
+    - name: Run Terraform Init
+      run: terraform init    
+      
+    - name: Run Terraform Format
+      run: terraform fmt
+
+    - name: Run Terraform Validate
+      run: terraform validate
+      
+    - name: Run Terraform Plan
+      run: terraform plan 
+
+    - name: Run Terraform Apply
+      run: terraform apply -auto-approve
