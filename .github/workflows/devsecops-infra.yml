@@ -5,7 +5,14 @@ jobs:
         runs-on: ubuntu-latest
         steps: 
         - name: Clone the repo
-          uses: actions/checkout@v6
+          uses: actions/checkout@v6        
+          with:     
+           fetch-depth: 0
+           
+        -name: Secret scanning
+            uses: gitleaks/gitleaks-action@v2
+            env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
          
         - name: setup Terraform           
           uses: hashicorp/setup-terraform@v4          
